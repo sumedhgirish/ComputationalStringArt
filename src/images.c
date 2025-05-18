@@ -59,6 +59,7 @@ RawImage* LoadJpegFromPath(const char* filename)
   newImage->width = imgWidth;
   newImage->height = imgHeight;
   newImage->data = imgData;
+  newImage->numColorChannels = 3;
 
   while (info.output_scanline < info.output_height) {
     imgRowBuffer[0] = (unsigned char *)(&imgData[3 * info.output_width * info.output_scanline]);
@@ -71,3 +72,5 @@ RawImage* LoadJpegFromPath(const char* filename)
 
   return newImage;
 }
+
+

@@ -10,6 +10,7 @@ add_executable(${PROJECT_NAME}
   # Required Source Files
   src/main.c
   src/images.c
+  src/filters.c
 )
 
 target_link_libraries(${PROJECT_NAME}
