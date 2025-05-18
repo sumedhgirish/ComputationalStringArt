@@ -44,30 +44,27 @@ NormImage* RgbToPrintable(RawImage* inputImage)
   // Translate rgb into cmy
   for (int color=0; color<3; ++color) {
     for (int i=0; i<monoChromeBufferWidth; ++i) {
-      (outputImage->data + color * monoChromeBufferWidth)[i] = ((float) (255 - (inputImage->data + color * monoChromeBufferWidth)[i])) / 255;
+      outputImage->data[i*5 + color] = ((float) 255 - inputImage->data[i*3 + color]) / 255;
     }
   }
 
   // Prepare k stream
   for (int i=0; i<monoChromeBufferWidth; ++i) {
-    (outputImage->data + 3 * monoChromeBufferWidth)[i] = min(min(
-      min((outputImage->data)[i], (outputImage->data + 1 * monoChromeBufferWidth)[i]),
-      (outputImage->data + 2 * monoChromeBufferWidth)[i]
-    ), 0.999);
+    outputImage->data[i*5 + 3] = min(min(min(outputImage->data[i*5], outputImage->data[i*5 + 1]), outputImage->data[i*5 + 2]), 0.999);
   }
 
   // remove redundant black from cmy
   for (int color=0; color<3; ++color) {
     for (int i=0; i<monoChromeBufferWidth; ++i) {
-      (outputImage->data + color * monoChromeBufferWidth)[i] -= (outputImage->data + 3 * monoChromeBufferWidth)[i];
-      (outputImage->data + color * monoChromeBufferWidth)[i] /= (1 - (outputImage->data + 3 * monoChromeBufferWidth)[i]);
+      outputImage->data[i*5 + color] -= outputImage->data[i*5 + 3];
+      outputImage->data[i*5 + color] /= (1 - outputImage->data[i*5 + 3]);
     }
   }
 
   // Prepare w stream
   for (int i=0; i<monoChromeBufferWidth; ++i) {
-    (outputImage->data + 4 * monoChromeBufferWidth)[i] = (
-      1 - (outputImage->data[i] + (outputImage->data + 1 * monoChromeBufferWidth)[i] + (outputImage->data + 2 * monoChromeBufferWidth)[i])/3
+    outputImage->data[i*5 + 4] = (
+      1 - (outputImage->data[i*5] + outputImage->data[i*5 + 1] + outputImage->data[i*5 + 2])/3
     );
   }
 

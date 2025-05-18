@@ -20,3 +20,6 @@ struct NormImage {
 // Functions to load images of different file formats
 RawImage* LoadJpegFromPath(const char* filename);
 
+// Unloading counterparts
+void UnloadRawImage(RawImage* image);
+void UnloadNormImage(NormImage* image);

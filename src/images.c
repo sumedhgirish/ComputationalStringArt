@@ -74,3 +74,20 @@ RawImage* LoadJpegFromPath(const char* filename)
 }
 
 
+void UnloadRawImage(RawImage *image)
+{
+  #if DEBUG
+    fprintf(stdout, "[INFO] <%s:%u> Called Free on raw-image.\n", __FILE__, __LINE__); 
+  #endif
+  free(image->data);
+  free(image);
+}
+
+void UnloadNormImage(NormImage *image)
+{
+  #if DEBUG
+    fprintf(stdout, "[INFO] <%s:%u> Called Free on norm-image.\n", __FILE__, __LINE__); 
+  #endif
+  free(image->data);
+  free(image);
+}
