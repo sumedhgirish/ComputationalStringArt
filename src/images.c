@@ -48,7 +48,7 @@ RawImage* LoadJpegFromPath(const char* filename)
   imgNumColorChannels = info.num_components;
 
   #if DEBUG
-    fprintf(stdout, "[INFO] <%s> Reading JPEG with size (%lu x %lu) and %u color channels\n",
+    fprintf(stderr, "[INFO] <%s> Reading JPEG with size (%lu x %lu) and %u color channels\n",
             filename, imgWidth, imgHeight, imgNumColorChannels);
   #endif
 
@@ -78,7 +78,7 @@ RawImage* LoadJpegFromPath(const char* filename)
 void UnloadRawImage(RawImage *image)
 {
   #if DEBUG
-    fprintf(stdout, "[INFO] <%s:%u> Called Free on raw-image.\n", __FILE__, __LINE__); 
+    fprintf(stderr, "[INFO] <%s:%u> Called Free on raw-image.\n", __FILE__, __LINE__); 
   #endif
   free(image->data);
   free(image);
@@ -87,7 +87,7 @@ void UnloadRawImage(RawImage *image)
 void UnloadNormImage(NormImage *image)
 {
   #if DEBUG
-    fprintf(stdout, "[INFO] <%s:%u> Called Free on norm-image.\n", __FILE__, __LINE__); 
+    fprintf(stderr, "[INFO] <%s:%u> Called Free on norm-image.\n", __FILE__, __LINE__); 
   #endif
   free(image->data);
   free(image);

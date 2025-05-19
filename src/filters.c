@@ -10,7 +10,7 @@
 NormImage* RgbToPrintable(RawImage* inputImage)
 {
   #if DEBUG
-    fprintf(stdout, "[INFO] Converting image to printable colors!\n");
+    fprintf(stderr, "[INFO] Converting image to printable colors!\n");
   #endif
 
   if (inputImage->numColorChannels != 3) {
