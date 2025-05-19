@@ -13,7 +13,7 @@ int main()
   #endif
 
   /* HYPERPARAMS */
-  const char* imageFile = "../images/naisha.jpeg";
+  const char* imageFile = "../images/naisha_face_blurred.jpeg";
   int totalNails = 2000;
   /* END HYPERPARAMS */
 
@@ -96,10 +96,15 @@ int main()
 
   // Unload allocated memory
   UnloadRawImage(imageData);
+  // End Center Cropping
 
-  for (int i=0; i<image->width * image->height * image->numColorChannels; ++i) {
-    printf("%u\n", image->data[i]);
-  }
+  // Start inversion of Image into CMYK and W
+  NormImage* invImage = RgbToPrintable(image);
+  // Unload Cropped Image
+  UnloadRawImage(image);
+
+  // End inversion into CMYK and W
+  UnloadNormImage(invImage);
 
   #if DEBUG
     fprintf(stderr, "[INFO] Done!\n");
