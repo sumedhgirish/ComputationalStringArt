@@ -115,7 +115,7 @@ NormImage* RadonTransform(NormImage* inputImage, float angles[], int nangles, in
         n = subpixi / resolution;
 
         projVal = modf(
-          (x + ((double)(m + 1) / resolution) * cos(angles[nangles]) + (y + ((double)(n + 1) / resolution)) * sin(angles[anglei]),
+          (x + ((double)(m + 1) / resolution) * cos(angles[anglei]) + (y + ((double)(n + 1) / resolution)) * sin(angles[anglei]),
           &bini);
 
         (transformImage->data + anglei * nbins)[(int)bini] += projVal * pixVal;
