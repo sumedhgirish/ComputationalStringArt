@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 #define min(a, b) ((a < b) ? (a) : (b))
 
@@ -69,4 +70,59 @@ NormImage* RgbToPrintable(RawImage* inputImage)
   }
 
   return outputImage;
+}
+
+
+/*
+* Radon Transform
+*
+* Split the pixels of the image into sub-pixels. For each angle, project the centers of the subpixels
+* onto the line perpendicular to the line of given angle. Bin the subpixels based on
+* ratio of distance to adjacent bins.
+*
+* If the given pixel is projected onto the bin exactly, give it the complete magnitude of
+* the subpixel.
+*
+* MATLAB uses 4 subpixels per pixel
+*
+* resolution : how many subpixels make 1 side of a pixel (default 2)
+*
+*/
+
+NormImage* RadonTransform(NormImage* inputImage, float angles[], int nangles, int nbins, int color, int resolution)
+{
+  NormImage* transformImage = malloc(sizeof(NormImage));
+  if (!transformImage) {
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> Failed to allocate memory for radon transform.\n", __FILE__, __LINE__);
+    #endif
+    return NULL;
+  }
+  transformImage->numColorChannels = 1;
+  transformImage->width = nangles;
+  transformImage->height = nbins;
+  transformImage->data = (double *)calloc(nangles * nbins, sizeof(double));
+
+  double pixVal, projVal, bini;
+  int x, y, m, n;
+  for (int anglei=0; anglei < nangles; ++anglei) {
+    for (int pixi=0; pixi < inputImage->width * inputImage->height; ++pixi) {
+      pixVal = inputImage->data[pixi * inputImage->numColorChannels + color];
+      for (int subpixi=0; subpixi < resolution * resolution; ++subpixi) {
+        x = pixi % inputImage->width;
+        y = pixi / inputImage->width;
+        m = subpixi % resolution;
+        n = subpixi / resolution;
+
+        projVal = modf(
+          (x + ((double)m / resolution) + 0.5) * cos(angles[nangles]) + (y + ((double)n / resolution) + 0.5) * sin(angles[anglei]),
+          &bini);
+
+        (transformImage->data + anglei * nbins)[(int)bini] += projVal * pixVal;
+        (transformImage->data + anglei * nbins)[(int)bini] += (1 - projVal) * pixVal;
+      }
+    }
+  }
+
+  return transformImage;
 }
