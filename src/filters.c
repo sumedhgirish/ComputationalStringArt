@@ -91,6 +91,14 @@ NormImage* RgbToPrintable(RawImage* inputImage)
 
 NormImage* RadonTransform(NormImage* inputImage, float angles[], int nangles, int nbins, int color, int resolution)
 {
+
+  if (color >= inputImage->numColorChannels) {
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> Tried to access invalid color channel in image.\n", __FILE__, __LINE__);
+    #endif
+    return NULL;
+  }
+
   NormImage* transformImage = malloc(sizeof(NormImage));
   if (!transformImage) {
     #if DEBUG
@@ -102,24 +110,28 @@ NormImage* RadonTransform(NormImage* inputImage, float angles[], int nangles, in
   transformImage->width = nangles;
   transformImage->height = nbins;
   transformImage->data = (double *)calloc(nangles * nbins, sizeof(double));
+  if (!transformImage->data) {
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> Failed to allocate memory for radon transform databuffer.\n", __FILE__, __LINE__);
+    #endif
+    return NULL;
+  }
 
   double pixVal, projVal, bini;
   int x, y, m, n;
   for (int anglei=0; anglei < nangles; ++anglei) {
     for (int pixi=0; pixi < inputImage->width * inputImage->height; ++pixi) {
       pixVal = inputImage->data[pixi * inputImage->numColorChannels + color];
+      x = pixi % inputImage->width;
+      y = pixi / inputImage->width;
       for (int subpixi=0; subpixi < resolution * resolution; ++subpixi) {
-        x = pixi % inputImage->width;
-        y = pixi / inputImage->width;
         m = subpixi % resolution;
         n = subpixi / resolution;
 
-        projVal = modf(
-          (x + ((double)(m + 1) / resolution) * cos(angles[anglei]) + (y + ((double)(n + 1) / resolution)) * sin(angles[anglei]),
-          &bini);
+        projVal = ((x + ((double)(m + 1) / resolution)) * cos(angles[anglei]) + (y + ((double)(n + 1) / resolution)) * sin(angles[anglei]));
 
-        (transformImage->data + anglei * nbins)[(int)bini] += projVal * pixVal;
-        (transformImage->data + anglei * nbins)[(int)bini] += (1 - projVal) * pixVal;
+        (transformImage->data + anglei * nbins)[(int)bini] += projVal * pixVal / nbins;
+        (transformImage->data + anglei * nbins)[(int)bini + 1] += (1 - projVal) * pixVal / nbins;
       }
     }
   }

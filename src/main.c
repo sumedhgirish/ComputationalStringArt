@@ -103,8 +103,29 @@ int main()
   // Unload Cropped Image
   UnloadRawImage(image);
 
+  // Create Radon Transform
+  float angles[180] = {0};
+  for (int i=0; i<180; ++i) angles[i] = i;
+
+  #if DEBUG
+    fprintf(stderr, "[INFO] Taking radon transform.\n");
+  #endif
+  NormImage* radonImage = RadonTransform(invImage, angles, 180, 500, 0, 2);
+
   // End inversion into CMYK and W
   UnloadNormImage(invImage);
+
+  #if DEBUG
+    fprintf(stderr, "[INFO] Writing to stdout.\n");
+  #endif
+  for (int i=0; i<180; ++i) {
+    for (int j=0; j<500; ++j) {
+      printf("%lf ", radonImage->data[i * 5 + j]);
+    }
+    printf("\n");
+  }
+
+  UnloadNormImage(radonImage);
 
   #if DEBUG
     fprintf(stderr, "[INFO] Done!\n");
