@@ -8,6 +8,38 @@
 
 #define min(a, b) ((a < b) ? (a) : (b))
 
+NormImage* NormalizeRawImage(RawImage* inputImage)
+{
+  #if DEBUG
+    fprintf(stderr, "[INFO] Normalizing image!\n");
+  #endif
+
+  NormImage* outputImage;
+  outputImage = (NormImage *)malloc(sizeof(NormImage));
+  if (!outputImage) {
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> Failed to allocate memory for output image.\n", __FILE__, __LINE__);
+    #endif
+    return NULL;
+  }
+  outputImage->data = (double *)malloc(sizeof(double) * inputImage->width * inputImage->height * inputImage->numColorChannels);
+  if (!outputImage) {
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> Failed to allocate memory for output image buffer.\n", __FILE__, __LINE__);
+    #endif
+    return NULL;
+  }
+  outputImage->numColorChannels = inputImage->numColorChannels;
+  outputImage->width = inputImage->width;
+  outputImage->height = inputImage->height;
+
+  for (int i=0; i < sizeof(outputImage->data); ++i) {
+    outputImage->data[i] = ((double)inputImage->data[i]) / 255;
+  }
+
+  return outputImage;
+}
+
 NormImage* RgbToPrintable(RawImage* inputImage)
 {
   #if DEBUG
@@ -117,9 +149,13 @@ NormImage* RadonTransform(NormImage* inputImage, float angles[], int nangles, in
     return NULL;
   }
 
+  double separation = sqrt(inputImage->width*inputImage->width + inputImage->height*inputImage->height) / nbins;
   double pixVal, projVal, bini;
+  double xProj, yProj;
   int x, y, m, n;
   for (int anglei=0; anglei < nangles; ++anglei) {
+    xProj = cos(angles[anglei]);
+    yProj = sin(angles[anglei]);
     for (int pixi=0; pixi < inputImage->width * inputImage->height; ++pixi) {
       pixVal = inputImage->data[pixi * inputImage->numColorChannels + color];
       x = pixi % inputImage->width;
@@ -128,10 +164,15 @@ NormImage* RadonTransform(NormImage* inputImage, float angles[], int nangles, in
         m = subpixi % resolution;
         n = subpixi / resolution;
 
-        projVal = ((x + ((double)(m + 1) / resolution)) * cos(angles[anglei]) + (y + ((double)(n + 1) / resolution)) * sin(angles[anglei]));
+        projVal = (
+          (x + (((double)m + 0.5) / resolution)) * xProj +
+          (y + (((double)n + 0.5) / resolution)) * yProj
+        );
 
-        (transformImage->data + anglei * nbins)[(int)bini] += projVal * pixVal / nbins;
-        (transformImage->data + anglei * nbins)[(int)bini + 1] += (1 - projVal) * pixVal / nbins;
+        projVal = modf( projVal / separation, &bini );
+
+        transformImage->data[anglei * nbins + (int) bini] += pixVal * projVal;
+        transformImage->data[anglei * nbins + (int) bini + 1] += pixVal * (1 - projVal);
       }
     }
   }
