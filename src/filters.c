@@ -23,19 +23,24 @@ NormImage* NormalizeRawImage(RawImage* inputImage)
     return NULL;
   }
   outputImage->data = (double *)malloc(sizeof(double) * inputImage->width * inputImage->height * inputImage->numColorChannels);
-  if (!outputImage) {
+  if (!outputImage->data) {
     #if DEBUG
       fprintf(stderr, "[ERROR] <%s:%u> Failed to allocate memory for output image buffer.\n", __FILE__, __LINE__);
     #endif
+    free(outputImage);
     return NULL;
   }
   outputImage->numColorChannels = inputImage->numColorChannels;
   outputImage->width = inputImage->width;
   outputImage->height = inputImage->height;
 
-  for (int i=0; i < sizeof(outputImage->data); ++i) {
-    outputImage->data[i] = ((double)inputImage->data[i]) / 255;
+  for (int i=0; i < inputImage->width * inputImage->height * inputImage->numColorChannels; ++i) {
+    outputImage->data[i] = ((double)inputImage->data[i]) / 255.0;
   }
+
+  #if DEBUG
+    fprintf(stderr, "[INFO] Finished normalization!\n");
+  #endif
 
   return outputImage;
 }
@@ -68,6 +73,7 @@ NormImage* RgbToPrintable(RawImage* inputImage)
     #if DEBUG
       fprintf(stderr, "[ERROR] <%s:%u> Failed to allocate memory for output image buffer.\n", __FILE__, __LINE__);
     #endif
+    free(outputImage);
     return NULL;
   }
   outputImage->numColorChannels = 5;
@@ -123,6 +129,10 @@ NormImage* RgbToPrintable(RawImage* inputImage)
 
 NormImage* RadonTransform(NormImage* inputImage, float angles[], int nangles, int nbins, int color, int resolution)
 {
+  #if DEBUG
+    fprintf(stderr, "[INFO] Performing Radon Trasform!\n");
+  #endif
+
 
   if (color >= inputImage->numColorChannels) {
     #if DEBUG
@@ -146,6 +156,7 @@ NormImage* RadonTransform(NormImage* inputImage, float angles[], int nangles, in
     #if DEBUG
       fprintf(stderr, "[ERROR] <%s:%u> Failed to allocate memory for radon transform databuffer.\n", __FILE__, __LINE__);
     #endif
+    free(transformImage);
     return NULL;
   }
 
@@ -154,6 +165,7 @@ NormImage* RadonTransform(NormImage* inputImage, float angles[], int nangles, in
   double xProj, yProj;
   int x, y, m, n;
   for (int anglei=0; anglei < nangles; ++anglei) {
+    fprintf(stderr, "[LOADING] %lf\n", angles[anglei]);
     xProj = cos(angles[anglei]);
     yProj = sin(angles[anglei]);
     for (int pixi=0; pixi < inputImage->width * inputImage->height; ++pixi) {

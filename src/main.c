@@ -13,7 +13,7 @@ int main()
   #endif
 
   /* HYPERPARAMS */
-  const char* imageFile = "../images/sinogram_source.jpeg";
+  const char* imageFile = "../images/circle.jpg";
   int totalNails = 2000;
   /* END HYPERPARAMS */
 
@@ -95,26 +95,26 @@ int main()
   }
 
   // Unload allocated memory
-  UnloadRawImage(imageData);
+  // UnloadRawImage(imageData);
   // End Center Cropping
 
   // // Start inversion of Image into CMYK and W
-  // NormImage* invImage = RgbToPrintable(image);
-  // if (!invImage) {
-  //   #if DEBUG
-  //     fprintf(stderr, "[ERROR] <%s:%u> Failed to convert image into printable colors CMYK!\n", __FILE__, __LINE__);
-  //   #endif
-  //   return 1;
-  // }
-  //
-
-  NormImage* invImage = NormalizeRawImage(image);
+  NormImage* invImage = RgbToPrintable(image);
   if (!invImage) {
     #if DEBUG
-      fprintf(stderr, "[ERROR] <%s:%u> Failed to Normalize image!\n", __FILE__, __LINE__);
+      fprintf(stderr, "[ERROR] <%s:%u> Failed to convert image into printable colors CMYK!\n", __FILE__, __LINE__);
     #endif
     return 1;
   }
+
+
+  // NormImage* invImage = NormalizeRawImage(image);
+  // if (!invImage) {
+  //   #if DEBUG
+  //     fprintf(stderr, "[ERROR] <%s:%u> Failed to Normalize image!\n", __FILE__, __LINE__);
+  //   #endif
+  //   return 1;
+  // }
   // Unload Cropped Image
   UnloadRawImage(image);
 
