@@ -103,7 +103,7 @@ NormImage* RgbToPrintable(RawImage* inputImage)
   // Prepare w stream
   for (int i=0; i<monoChromeBufferWidth; ++i) {
     outputImage->data[i*5 + 4] = (
-      1 - (outputImage->data[i*5] + outputImage->data[i*5 + 1] + outputImage->data[i*5 + 2])/3
+      (double)(inputImage->data[i*3 + 0] + inputImage->data[i*3 + 1] + inputImage->data[i*3 + 2]) / (255 * 3)
     );
   }
 
@@ -164,7 +164,9 @@ NormImage* RadonTransform(NormImage* inputImage, float angles[], int nangles, in
   xc = ceil((double)inputImage->width / 2);
   yc = ceil((double)inputImage->height / 2);
   hyp = sqrt(inputImage->width*inputImage->width + inputImage->height*inputImage->height);
+  // fprintf(stderr, "[INFO] center_x=%lf, center_y=%lf, hyp=%lf\n", xc, yc, hyp);
   double separation = sqrt(inputImage->width*inputImage->width + inputImage->height*inputImage->height) / nbins;
+  double scale = 1. / (double) (resolution * resolution);
   double pixVal, projVal, bini;
   double xProj, yProj;
   int x, y, m, n;
@@ -177,7 +179,7 @@ NormImage* RadonTransform(NormImage* inputImage, float angles[], int nangles, in
       if (!pixVal) continue;
       x = pixi % inputImage->width;
       y = pixi / inputImage->width;
-      // fprintf(stderr, "\n[DEBUG] Pixel %d %lf: ", pixi, pixVal);
+      // if (pixi == 204906) fprintf(stderr, "\n[DEBUG] Pixel %d %d %lf: ", x, y, pixVal);
       for (int subpixi=0; subpixi < resolution * resolution; ++subpixi) {
         m = subpixi % resolution;
         n = subpixi / resolution;
@@ -188,10 +190,10 @@ NormImage* RadonTransform(NormImage* inputImage, float angles[], int nangles, in
         );
 
         projVal = modf( (projVal + hyp/2) / separation, &bini );
-        // fprintf(stderr, "[%lf %lf] ", projVal, bini);
+        // if (pixi == 204906) fprintf(stderr, "[%lf %lf] ", projVal, bini);
 
-        transformImage->data[anglei * nbins + (int) bini] += pixVal * projVal;
-        transformImage->data[anglei * nbins + (int) bini + 1] += pixVal * (1 - projVal);
+        transformImage->data[anglei * nbins + (int) bini] += (pixVal * projVal) * scale;
+        transformImage->data[anglei * nbins + (int) bini + 1] += pixVal * (1 - projVal) * scale;
       }
     }
   }

@@ -13,7 +13,7 @@ int main()
   #endif
 
   /* HYPERPARAMS */
-  const char* imageFile = "../images/circle.jpg";
+  const char* imageFile = "../images/naisha_face_blurred.jpeg";
   int totalNails = 2000;
   /* END HYPERPARAMS */
 
@@ -107,7 +107,13 @@ int main()
     return 1;
   }
 
-
+  // for (int j=0; j<invImage->height; ++j) {
+  //   for (int i=0; i<image->width; ++i) {
+  //     fprintf(stdout, "%lf ", invImage->data[(i + j * invImage->width) * invImage->numColorChannels + 4]);
+  //   }
+  //   fprintf(stdout, "\n");
+  // }
+  //
   // NormImage* invImage = NormalizeRawImage(image);
   // if (!invImage) {
   //   #if DEBUG
@@ -117,6 +123,7 @@ int main()
   // }
   // Unload Cropped Image
   UnloadRawImage(image);
+  // return 0;
 
   // Create Radon Transform
   float angles[180] = {0};
@@ -125,7 +132,7 @@ int main()
   #if DEBUG
     fprintf(stderr, "[INFO] Taking radon transform.\n");
   #endif
-  NormImage* radonImage = RadonTransform(invImage, angles, 180, 500, 0, 2);
+  NormImage* radonImage = RadonTransform(invImage, angles, 180, 500, 4, 1);
 
   // End inversion into CMYK and W
   UnloadNormImage(invImage);
@@ -135,7 +142,7 @@ int main()
   #endif
   for (int i=0; i<180; ++i) {
     for (int j=0; j<500; ++j) {
-      printf("%lf ", radonImage->data[i * 5 + j]);
+      printf("%lf ", radonImage->data[i * 500 + j]);
     }
     printf("\n");
   }
