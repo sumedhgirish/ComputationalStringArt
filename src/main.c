@@ -120,7 +120,7 @@ int main()
 
   // Create Radon Transform
   float angles[180] = {0};
-  for (int i=0; i<180; ++i) angles[i] = i;
+  for (int i=0; i<180; ++i) angles[i] = i * 3.14 / 180;
 
   #if DEBUG
     fprintf(stderr, "[INFO] Taking radon transform.\n");

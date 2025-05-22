@@ -160,28 +160,35 @@ NormImage* RadonTransform(NormImage* inputImage, float angles[], int nangles, in
     return NULL;
   }
 
+  double xc, yc, hyp;
+  xc = ceil((double)inputImage->width / 2);
+  yc = ceil((double)inputImage->height / 2);
+  hyp = sqrt(inputImage->width*inputImage->width + inputImage->height*inputImage->height);
   double separation = sqrt(inputImage->width*inputImage->width + inputImage->height*inputImage->height) / nbins;
   double pixVal, projVal, bini;
   double xProj, yProj;
   int x, y, m, n;
   for (int anglei=0; anglei < nangles; ++anglei) {
-    fprintf(stderr, "[LOADING] %lf\n", angles[anglei]);
-    xProj = cos(angles[anglei]);
-    yProj = sin(angles[anglei]);
+    xProj = -sin(angles[anglei]);
+    yProj = cos(angles[anglei]);
+    // fprintf(stderr, "\n[LOADING] Angle: %lf", angles[anglei]);
     for (int pixi=0; pixi < inputImage->width * inputImage->height; ++pixi) {
       pixVal = inputImage->data[pixi * inputImage->numColorChannels + color];
+      if (!pixVal) continue;
       x = pixi % inputImage->width;
       y = pixi / inputImage->width;
+      // fprintf(stderr, "\n[DEBUG] Pixel %d %lf: ", pixi, pixVal);
       for (int subpixi=0; subpixi < resolution * resolution; ++subpixi) {
         m = subpixi % resolution;
         n = subpixi / resolution;
 
         projVal = (
-          (x + (((double)m + 0.5) / resolution)) * xProj +
-          (y + (((double)n + 0.5) / resolution)) * yProj
+          (x - xc + (((double)m + 0.5) / resolution)) * xProj +
+          (y - yc + (((double)n + 0.5) / resolution)) * yProj
         );
 
-        projVal = modf( projVal / separation, &bini );
+        projVal = modf( (projVal + hyp/2) / separation, &bini );
+        // fprintf(stderr, "[%lf %lf] ", projVal, bini);
 
         transformImage->data[anglei * nbins + (int) bini] += pixVal * projVal;
         transformImage->data[anglei * nbins + (int) bini + 1] += pixVal * (1 - projVal);
