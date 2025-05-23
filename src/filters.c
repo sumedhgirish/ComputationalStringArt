@@ -15,24 +15,13 @@ NormImage* NormalizeRawImage(RawImage* inputImage)
   #endif
 
   NormImage* outputImage;
-  outputImage = (NormImage *)malloc(sizeof(NormImage));
+  outputImage = LoadNormImage(inputImage->width, inputImage->height, inputImage->numColorChannels);
   if (!outputImage) {
     #if DEBUG
-      fprintf(stderr, "[ERROR] <%s:%u> Failed to allocate memory for output image.\n", __FILE__, __LINE__);
+      fprintf(stderr, "[ERROR] <%s:%u> Failed to load norm image.\n", __FILE__, __LINE__);
     #endif
     return NULL;
   }
-  outputImage->data = (double *)malloc(sizeof(double) * inputImage->width * inputImage->height * inputImage->numColorChannels);
-  if (!outputImage->data) {
-    #if DEBUG
-      fprintf(stderr, "[ERROR] <%s:%u> Failed to allocate memory for output image buffer.\n", __FILE__, __LINE__);
-    #endif
-    free(outputImage);
-    return NULL;
-  }
-  outputImage->numColorChannels = inputImage->numColorChannels;
-  outputImage->width = inputImage->width;
-  outputImage->height = inputImage->height;
 
   for (int i=0; i < inputImage->width * inputImage->height * inputImage->numColorChannels; ++i) {
     outputImage->data[i] = ((double)inputImage->data[i]) / 255.0;
@@ -60,25 +49,13 @@ NormImage* RgbToPrintable(RawImage* inputImage)
   NormImage* outputImage;
   unsigned long int monoChromeBufferWidth = inputImage->width * inputImage->height;
 
-  outputImage = (NormImage *)malloc(sizeof(NormImage));
+  outputImage = LoadNormImage(inputImage->width, inputImage->height, 5);
   if (!outputImage) {
     #if DEBUG
-      fprintf(stderr, "[ERROR] <%s:%u> Failed to allocate memory for output image.\n", __FILE__, __LINE__);
+      fprintf(stderr, "[ERROR] <%s:%u> Failed to load output image.\n", __FILE__, __LINE__);
     #endif
     return NULL;
   }
-  // Reserve memory for C, M, Y, K, and W
-  outputImage->data = (double *)malloc(sizeof(double) * monoChromeBufferWidth * 5);
-  if (!outputImage) {
-    #if DEBUG
-      fprintf(stderr, "[ERROR] <%s:%u> Failed to allocate memory for output image buffer.\n", __FILE__, __LINE__);
-    #endif
-    free(outputImage);
-    return NULL;
-  }
-  outputImage->numColorChannels = 5;
-  outputImage->width = inputImage->width;
-  outputImage->height = inputImage->height;
 
   // Translate rgb into cmy
   for (int color=0; color<3; ++color) {
@@ -127,12 +104,11 @@ NormImage* RgbToPrintable(RawImage* inputImage)
 *
 */
 
-NormImage* RadonTransform(NormImage* inputImage, float angles[], int nangles, int nbins, int color, int resolution)
+NormImage* RadonTransform(NormImage* inputImage, double angles[], int nangles, int nbins, int color, int resolution)
 {
   #if DEBUG
     fprintf(stderr, "[INFO] Performing Radon Trasform!\n");
   #endif
-
 
   if (color >= inputImage->numColorChannels) {
     #if DEBUG
@@ -140,46 +116,37 @@ NormImage* RadonTransform(NormImage* inputImage, float angles[], int nangles, in
     #endif
     return NULL;
   }
-
-  NormImage* transformImage = malloc(sizeof(NormImage));
-  if (!transformImage) {
-    #if DEBUG
-      fprintf(stderr, "[ERROR] <%s:%u> Failed to allocate memory for radon transform.\n", __FILE__, __LINE__);
-    #endif
-    return NULL;
-  }
-  transformImage->numColorChannels = 1;
-  transformImage->width = nangles;
-  transformImage->height = nbins;
-  transformImage->data = (double *)calloc(nangles * nbins, sizeof(double));
-  if (!transformImage->data) {
-    #if DEBUG
-      fprintf(stderr, "[ERROR] <%s:%u> Failed to allocate memory for radon transform databuffer.\n", __FILE__, __LINE__);
-    #endif
-    free(transformImage);
-    return NULL;
-  }
+  NormImage* transformImage = LoadNormImage(nangles, nbins, 1);
 
   double xc, yc, hyp;
   xc = ceil((double)inputImage->width / 2);
   yc = ceil((double)inputImage->height / 2);
   hyp = sqrt(inputImage->width*inputImage->width + inputImage->height*inputImage->height);
+
   // fprintf(stderr, "[INFO] center_x=%lf, center_y=%lf, hyp=%lf\n", xc, yc, hyp);
   double separation = sqrt(inputImage->width*inputImage->width + inputImage->height*inputImage->height) / nbins;
   double scale = 1. / (double) (resolution * resolution);
+
   double pixVal, projVal, bini;
   double xProj, yProj;
   int x, y, m, n;
+
   for (int anglei=0; anglei < nangles; ++anglei) {
     xProj = -sin(angles[anglei]);
     yProj = cos(angles[anglei]);
+
     // fprintf(stderr, "\n[LOADING] Angle: %lf", angles[anglei]);
+
     for (int pixi=0; pixi < inputImage->width * inputImage->height; ++pixi) {
+
       pixVal = inputImage->data[pixi * inputImage->numColorChannels + color];
       if (!pixVal) continue;
+
       x = pixi % inputImage->width;
       y = pixi / inputImage->width;
+
       // if (pixi == 204906) fprintf(stderr, "\n[DEBUG] Pixel %d %d %lf: ", x, y, pixVal);
+
       for (int subpixi=0; subpixi < resolution * resolution; ++subpixi) {
         m = subpixi % resolution;
         n = subpixi / resolution;
@@ -190,10 +157,11 @@ NormImage* RadonTransform(NormImage* inputImage, float angles[], int nangles, in
         );
 
         projVal = modf( (projVal + hyp/2) / separation, &bini );
+
         // if (pixi == 204906) fprintf(stderr, "[%lf %lf] ", projVal, bini);
 
-        transformImage->data[anglei * nbins + (int) bini] += (pixVal * projVal) * scale;
-        transformImage->data[anglei * nbins + (int) bini + 1] += pixVal * (1 - projVal) * scale;
+        transformImage->data[anglei * nbins + (int) bini + 1] += (pixVal * projVal) * scale;
+        transformImage->data[anglei * nbins + (int) bini] += pixVal * (1 - projVal) * scale;
       }
     }
   }

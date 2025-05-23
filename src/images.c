@@ -74,6 +74,30 @@ RawImage* LoadJpegFromPath(const char* filename)
   return newImage;
 }
 
+RawImage* LoadRawImage(unsigned long width, unsigned long height, unsigned int numColorChannels)
+{
+  RawImage* outImage = malloc(sizeof(RawImage));
+  if (!outImage) {
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> Malloc failed for RawImage object!\n", __FILE__, __LINE__);
+    #endif
+    return NULL;
+  }
+  outImage->width = width;
+  outImage->height = height;
+  outImage->numColorChannels = numColorChannels;
+
+  outImage->data = (unsigned char *)malloc(sizeof(unsigned char) * width * height * numColorChannels);
+  if (!outImage->data) {
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> Could not allocate memory for RawImage databuffer!\n", __FILE__, __LINE__);
+    #endif
+    free(outImage);
+    return NULL;
+  }
+
+  return outImage;
+}
 
 void UnloadRawImage(RawImage *image)
 {
@@ -82,6 +106,31 @@ void UnloadRawImage(RawImage *image)
   #endif
   free(image->data);
   free(image);
+}
+
+NormImage* LoadNormImage(unsigned long width, unsigned long height, unsigned int numColorChannels)
+{
+  NormImage* outImage = malloc(sizeof(NormImage));
+  if (!outImage) {
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> Malloc failed for NormImage object!\n", __FILE__, __LINE__);
+    #endif
+    return NULL;
+  }
+  outImage->width = width;
+  outImage->height = height;
+  outImage->numColorChannels = numColorChannels;
+
+  outImage->data = (double *)calloc(width * height * numColorChannels, sizeof(double));
+  if (!outImage->data) {
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> Could not allocate memory for NormImage databuffer!\n", __FILE__, __LINE__);
+    #endif
+    free(outImage);
+    return NULL;
+  }
+
+  return outImage;
 }
 
 void UnloadNormImage(NormImage *image)

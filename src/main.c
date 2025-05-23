@@ -4,7 +4,6 @@
 
 #include <stdio.h>
 #include <math.h>
-#include <stdlib.h>
 
 int main()
 {
@@ -13,7 +12,7 @@ int main()
   #endif
 
   /* HYPERPARAMS */
-  const char* imageFile = "../images/naisha_face_blurred.jpeg";
+  const char* imageFile = "../images/circle.jpg";
   int totalNails = 2000;
   /* END HYPERPARAMS */
 
@@ -64,21 +63,10 @@ int main()
   // End frame size calculation
 
   // Crop image to calculated frame size
-  RawImage* image = malloc(sizeof(RawImage));
+  RawImage* image = LoadRawImage(newWidth, newHeight, imageData->numColorChannels);
   if (!image) {
     #if DEBUG
-      fprintf(stderr, "[ERROR] <%s:%u> Malloc failed for cropped image!\n", __FILE__, __LINE__);
-    #endif
-    return 1;
-  }
-
-  image->numColorChannels = imageData->numColorChannels;
-  image->width = newWidth;
-  image->height = newHeight;
-  image->data = (unsigned char *)malloc(sizeof(unsigned char) * newWidth * newHeight * imageData->numColorChannels);
-  if (!image) {
-    #if DEBUG
-      fprintf(stderr, "[ERROR] <%s:%u> Malloc failed for cropped image databuffer!\n", __FILE__, __LINE__);
+      fprintf(stderr, "[WARNING] <%s:%u> Could not create cropped image!\n", __FILE__, __LINE__);
     #endif
     return 1;
   }
@@ -94,11 +82,9 @@ int main()
     }
   }
 
-  // Unload allocated memory
-  // UnloadRawImage(imageData);
   // End Center Cropping
 
-  // // Start inversion of Image into CMYK and W
+  // Start inversion of Image into CMYK and W
   NormImage* invImage = RgbToPrintable(image);
   if (!invImage) {
     #if DEBUG
@@ -121,12 +107,12 @@ int main()
   //   #endif
   //   return 1;
   // }
+
   // Unload Cropped Image
   UnloadRawImage(image);
-  // return 0;
 
   // Create Radon Transform
-  float angles[180] = {0};
+  double angles[180] = {0};
   for (int i=0; i<180; ++i) angles[i] = i * 3.14 / 180;
 
   #if DEBUG
