@@ -2,7 +2,6 @@
 #include "images.h"
 #include "filters.h"
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -117,6 +116,13 @@ NormImage* RadonTransform(NormImage* inputImage, double angles[], int nangles, i
     return NULL;
   }
   NormImage* transformImage = LoadNormImage(nangles, nbins, 1);
+  if (!transformImage) {
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> Failed to create new image transformImage.\n", __FILE__, __LINE__);
+    #endif
+    return NULL;
+  }
+
 
   double xc, yc, hyp;
   xc = ceil((double)inputImage->width / 2);
@@ -167,4 +173,122 @@ NormImage* RadonTransform(NormImage* inputImage, double angles[], int nangles, i
   }
 
   return transformImage;
+}
+
+NormImage* NormRadonTransform(NormImage* inputImage, double angles[], int nangles, int nbins, int color, int resolution, NormImage* lenImage)
+{
+  #if DEBUG
+    fprintf(stderr, "[INFO] Performing Radon Trasform!\n");
+  #endif
+
+  if (color >= inputImage->numColorChannels) {
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> Tried to access invalid color channel in image.\n", __FILE__, __LINE__);
+    #endif
+    return NULL;
+  }
+  NormImage* transformImage = LoadNormImage(nangles, nbins, 1);
+  if (!transformImage) {
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> Failed to create new image transformImage.\n", __FILE__, __LINE__);
+    #endif
+    return NULL;
+  }
+
+
+  double xc, yc, hyp;
+  xc = ceil((double)inputImage->width / 2);
+  yc = ceil((double)inputImage->height / 2);
+  hyp = sqrt(inputImage->width*inputImage->width + inputImage->height*inputImage->height);
+
+  // fprintf(stderr, "[INFO] center_x=%lf, center_y=%lf, hyp=%lf\n", xc, yc, hyp);
+  double separation = sqrt(inputImage->width*inputImage->width + inputImage->height*inputImage->height) / nbins;
+  double scale = 1. / (double) (resolution * resolution);
+
+  double pixVal, projVal, bini;
+  double xProj, yProj;
+  int x, y, m, n;
+
+  for (int anglei=0; anglei < nangles; ++anglei) {
+    xProj = -sin(angles[anglei]);
+    yProj = cos(angles[anglei]);
+
+    // fprintf(stderr, "\n[LOADING] Angle: %lf", angles[anglei]);
+
+    for (int pixi=0; pixi < inputImage->width * inputImage->height; ++pixi) {
+
+      pixVal = inputImage->data[pixi * inputImage->numColorChannels + color];
+      if (!pixVal) continue;
+
+      x = pixi % inputImage->width;
+      y = pixi / inputImage->width;
+
+      // if (pixi == 204906) fprintf(stderr, "\n[DEBUG] Pixel %d %d %lf: ", x, y, pixVal);
+
+      for (int subpixi=0; subpixi < resolution * resolution; ++subpixi) {
+        m = subpixi % resolution;
+        n = subpixi / resolution;
+
+        projVal = (
+          (x - xc + (((double)m + 0.5) / resolution)) * xProj +
+          (y - yc + (((double)n + 0.5) / resolution)) * yProj
+        ) / lenImage->data[anglei * inputImage->height * inputImage->width * resolution * resolution
+                          + pixi * resolution * resolution + subpixi];
+
+        projVal = modf( (projVal + hyp/2) / separation, &bini );
+
+        // if (pixi == 204906) fprintf(stderr, "[%lf %lf] ", projVal, bini);
+
+        transformImage->data[anglei * nbins + (int) bini + 1] += (pixVal * projVal) * scale;
+        transformImage->data[anglei * nbins + (int) bini] += pixVal * (1 - projVal) * scale;
+      }
+    }
+  }
+
+  return transformImage;
+}
+
+
+NormImage* GetStringLengths(long int width, long int height, int resolution, double angles[], int nangles)
+{
+  #if DEBUG
+    fprintf(stderr, "[INFO] Calculating String Lengths!\n");
+  #endif
+
+  NormImage* outImage = LoadNormImage(width*height*resolution*resolution, nangles, 1);
+  if (!outImage) {
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> Failed to create new image transformImage.\n", __FILE__, __LINE__);
+    #endif
+    return NULL;
+  }
+
+  double slope = 0;
+  int x, y, m, n;
+  double x0, y0, x1, y1, x2, y2;
+  for (int anglei=0; anglei<nangles; ++anglei) {
+    slope = tan(angles[anglei]);
+    for (int pixi=0; pixi<height*width; ++pixi) {
+      x = pixi % width;
+      y = pixi / width;
+      for (int subpixi=0; subpixi<resolution*resolution; ++subpixi) {
+        m = subpixi % resolution;
+        n = subpixi / resolution;
+
+        x0 = x + (m + 0.5) / resolution;
+        y0 = y + (n + 0.5) / resolution;
+
+        x1 = fmin(fmax(0, x0 - y0 / slope), width);
+        y1 = y0 + (x1 - x0) * slope;
+
+        x2 = fmin(fmax(0, x0 + (height - y0) / slope), width);
+        y2 = y0 + (x2 - x0) * slope;
+
+        outImage->data[anglei * height * width * resolution * resolution + pixi * resolution * resolution + subpixi]
+          = sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+      }
+    }
+  }
+
+  return outImage;
 }

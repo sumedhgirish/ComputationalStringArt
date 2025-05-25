@@ -115,13 +115,30 @@ int main()
   double angles[180] = {0};
   for (int i=0; i<180; ++i) angles[i] = i * 3.14 / 180;
 
+  NormImage* lenImage = GetStringLengths(invImage->width, invImage->height, 2, angles, 180);
+
+  #if DEBUG
+    fprintf(stderr, "[INFO] Completed Length Calculation.\n");
+  #endif
+
+  int buflen = invImage->width*invImage->height*4;
+  for (int i=0; i<180; ++i) {
+    for (int j=0; j<180; ++j) {
+      printf("%lf ", lenImage->data[i * buflen + j]);
+    }
+    printf("\n");
+  }
+
+
+  return 0;
   #if DEBUG
     fprintf(stderr, "[INFO] Taking radon transform.\n");
   #endif
-  NormImage* radonImage = RadonTransform(invImage, angles, 180, 500, 4, 1);
+  NormImage* radonImage = RadonTransform(invImage, angles, 180, 500, 4, 2);
 
   // End inversion into CMYK and W
   UnloadNormImage(invImage);
+  UnloadNormImage(lenImage);
 
   #if DEBUG
     fprintf(stderr, "[INFO] Writing to stdout.\n");
