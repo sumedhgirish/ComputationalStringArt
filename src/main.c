@@ -12,7 +12,7 @@ int main()
   #endif
 
   /* HYPERPARAMS */
-  const char* imageFile = "../images/circle.jpg";
+  const char* imageFile = "../images/nikhil.jpg";
   int totalNails = 2000;
   /* END HYPERPARAMS */
 
@@ -121,20 +121,20 @@ int main()
     fprintf(stderr, "[INFO] Completed Length Calculation.\n");
   #endif
 
-  int buflen = invImage->width*invImage->height*4;
-  for (int i=0; i<180; ++i) {
-    for (int j=0; j<180; ++j) {
-      printf("%lf ", lenImage->data[i * buflen + j]);
-    }
-    printf("\n");
-  }
-
-
-  return 0;
+  // int buflen = invImage->width*invImage->height*4;
+  // for (int i=0; i<180; ++i) {
+  //   for (int j=0; j<360; ++j) {
+  //     printf("%lf ", lenImage->data[i * buflen + j]);
+  //   }
+  //   printf("\n");
+  // }
+  //
+  //
+  // return 0;
   #if DEBUG
     fprintf(stderr, "[INFO] Taking radon transform.\n");
   #endif
-  NormImage* radonImage = RadonTransform(invImage, angles, 180, 500, 4, 2);
+  NormImage* radonImage = NormRadonTransform(invImage, angles, 180, 500, 4, 2, lenImage);
 
   // End inversion into CMYK and W
   UnloadNormImage(invImage);

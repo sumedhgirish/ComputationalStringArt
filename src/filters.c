@@ -205,7 +205,7 @@ NormImage* NormRadonTransform(NormImage* inputImage, double angles[], int nangle
   double separation = sqrt(inputImage->width*inputImage->width + inputImage->height*inputImage->height) / nbins;
   double scale = 1. / (double) (resolution * resolution);
 
-  double pixVal, projVal, bini;
+  double pixVal, projVal, bini, line_len;
   double xProj, yProj;
   int x, y, m, n;
 
@@ -232,15 +232,16 @@ NormImage* NormRadonTransform(NormImage* inputImage, double angles[], int nangle
         projVal = (
           (x - xc + (((double)m + 0.5) / resolution)) * xProj +
           (y - yc + (((double)n + 0.5) / resolution)) * yProj
-        ) / lenImage->data[anglei * inputImage->height * inputImage->width * resolution * resolution
-                          + pixi * resolution * resolution + subpixi];
+        );
 
         projVal = modf( (projVal + hyp/2) / separation, &bini );
 
         // if (pixi == 204906) fprintf(stderr, "[%lf %lf] ", projVal, bini);
+        line_len = lenImage->data[anglei * inputImage->height * inputImage->width * resolution * resolution
+          + pixi * resolution * resolution + subpixi];
 
-        transformImage->data[anglei * nbins + (int) bini + 1] += (pixVal * projVal) * scale;
-        transformImage->data[anglei * nbins + (int) bini] += pixVal * (1 - projVal) * scale;
+        transformImage->data[anglei * nbins + (int) bini + 1] += (pixVal * projVal) * scale / line_len;
+        transformImage->data[anglei * nbins + (int) bini] += pixVal * (1 - projVal) * scale / line_len;
       }
     }
   }
@@ -267,6 +268,22 @@ NormImage* GetStringLengths(long int width, long int height, int resolution, dou
   int x, y, m, n;
   double x0, y0, x1, y1, x2, y2;
   for (int anglei=0; anglei<nangles; ++anglei) {
+    if (angles[anglei] - 3.14 / 2 <= 0.01) {
+      for (int pixi=0; pixi<height*width; ++pixi) {
+        x = pixi % width;
+        y = pixi / width;
+        for (int subpixi=0; subpixi<resolution*resolution; ++subpixi) {
+          m = subpixi % resolution;
+          n = subpixi / resolution;
+
+          outImage->data[anglei * height * width * resolution * resolution + pixi * resolution * resolution + subpixi]
+            = height;
+        }
+      }
+
+      continue;
+    }
+
     slope = tan(angles[anglei]);
     for (int pixi=0; pixi<height*width; ++pixi) {
       x = pixi % width;
