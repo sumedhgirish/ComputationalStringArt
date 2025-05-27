@@ -1,6 +1,5 @@
 #pragma once
 
-
 // Things TODO
 //
 // 1) Take normalised radon transform of a color channel

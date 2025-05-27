@@ -121,6 +121,9 @@ int main()
     fprintf(stderr, "[INFO] Completed Length Calculation.\n");
   #endif
 
+  UnloadNormImage(invImage);
+  UnloadNormImage(lenImage);
+
   // int buflen = invImage->width*invImage->height*4;
   // for (int i=0; i<180; ++i) {
   //   for (int j=0; j<360; ++j) {
@@ -131,26 +134,6 @@ int main()
   //
   //
   // return 0;
-  #if DEBUG
-    fprintf(stderr, "[INFO] Taking radon transform.\n");
-  #endif
-  NormImage* radonImage = NormRadonTransform(invImage, angles, 180, 500, 4, 2, lenImage);
-
-  // End inversion into CMYK and W
-  UnloadNormImage(invImage);
-  UnloadNormImage(lenImage);
-
-  #if DEBUG
-    fprintf(stderr, "[INFO] Writing to stdout.\n");
-  #endif
-  for (int i=0; i<180; ++i) {
-    for (int j=0; j<500; ++j) {
-      printf("%lf ", radonImage->data[i * 500 + j]);
-    }
-    printf("\n");
-  }
-
-  UnloadNormImage(radonImage);
 
   #if DEBUG
     fprintf(stderr, "[INFO] Done!\n");
