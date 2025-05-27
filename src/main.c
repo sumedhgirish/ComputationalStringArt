@@ -12,7 +12,7 @@ int main()
   #endif
 
   /* HYPERPARAMS */
-  const char* imageFile = "../images/nikhil.jpg";
+  const char* imageFile = "../images/naisha_face_blurred.jpeg";
   int totalNails = 2000;
   /* END HYPERPARAMS */
 
