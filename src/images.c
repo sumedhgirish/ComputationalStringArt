@@ -21,7 +21,6 @@ RawImage* LoadJpegFromPath(const char* filename)
   int imgNumColorChannels;
 
   unsigned long int dwBufferBytes;
-  unsigned char* imgData;
 
   unsigned char* imgRowBuffer[1];
 
@@ -52,18 +51,11 @@ RawImage* LoadJpegFromPath(const char* filename)
             filename, imgWidth, imgHeight, imgNumColorChannels);
   #endif
 
-  dwBufferBytes = imgWidth * imgHeight * imgNumColorChannels;
-  imgData = (unsigned char*)malloc(sizeof(unsigned char) * dwBufferBytes);
-
-  newImage = (RawImage*)malloc(sizeof(RawImage));
-  newImage->width = imgWidth;
-  newImage->height = imgHeight;
-  newImage->data = imgData;
-  newImage->numColorChannels = imgNumColorChannels;
+  newImage = LoadRawImage(imgWidth, imgHeight, imgNumColorChannels);
 
   while (info.output_scanline < info.output_height) {
     // If 4 channels doesn't work, its because I changed 3 to info.num_components, try changing it back and above.
-    imgRowBuffer[0] = (unsigned char *)(&imgData[info.num_components * info.output_width * info.output_scanline]);
+    imgRowBuffer[0] = (unsigned char *)(&newImage->data[info.num_components * info.output_width * info.output_scanline]);
     jpeg_read_scanlines(&info, imgRowBuffer, 1);
   }
 

@@ -12,7 +12,7 @@ int main()
   #endif
 
   /* HYPERPARAMS */
-  const char* imageFile = "../images/naisha_face_blurred.jpeg";
+  const char* imageFile = "./images/nikhil.jpg";
   int totalNails = 2000;
   /* END HYPERPARAMS */
 
@@ -110,6 +110,12 @@ int main()
 
   // Unload Cropped Image
   UnloadRawImage(image);
+  image->data = NULL;
+  image = NULL;
+
+  UnloadRawImage(imageData);
+  imageData->data = NULL;
+  imageData = NULL;
 
   // Create Radon Transform
   double angles[180] = {0};
@@ -122,7 +128,12 @@ int main()
   #endif
 
   UnloadNormImage(invImage);
+  invImage->data = NULL;
+  invImage = NULL;
+
   UnloadNormImage(lenImage);
+  lenImage->data = NULL;
+  lenImage = NULL;
 
   // int buflen = invImage->width*invImage->height*4;
   // for (int i=0; i<180; ++i) {
