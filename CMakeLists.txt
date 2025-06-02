@@ -3,8 +3,8 @@ project(StringArt)
 
 find_package(
   JPEG REQUIRED
+  PNG  REQUIRED
 )
-
 
 add_executable(${PROJECT_NAME}
   # Required Source Files
@@ -14,6 +14,7 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-  JPEG::JPEG
+  jpeg
+  png
   m
 )

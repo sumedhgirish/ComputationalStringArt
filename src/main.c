@@ -12,11 +12,11 @@ int main()
   #endif
 
   /* HYPERPARAMS */
-  const char* imageFile = "./images/nikhil.jpg";
+  const char* imageFile = "../images/crown.png";
   int totalNails = 2000;
   /* END HYPERPARAMS */
 
-  RawImage* imageData = LoadJpegFromPath(imageFile); /* Path is relative to directory program runs from */
+  RawImage* imageData = LoadPngFromPath(imageFile); /* Path is relative to directory program runs from */
   if (!imageData) {
     #if DEBUG
       fprintf(stderr, "[WARNING] Could not read image!\n");

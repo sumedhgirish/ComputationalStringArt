@@ -1,11 +1,13 @@
 #include "options.h"
 #include "images.h"
 
-#include <stddef.h>
+#include <pngconf.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <jpeglib.h>
 #include <jerror.h>
-#include <stdlib.h>
+#include <setjmp.h>
+#include <png.h>
 
 RawImage* LoadJpegFromPath(const char* filename)
 {
@@ -65,6 +67,94 @@ RawImage* LoadJpegFromPath(const char* filename)
 
   return newImage;
 }
+
+RawImage* LoadPngFromPath(const char* filename)
+{
+  /* open file and test for it being a png */
+  FILE *fp = fopen(filename, "rb");
+  if (!fp) {
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> File %s could not be opened for reading.\n", __FILE__, __LINE__, filename);
+    #endif
+    return NULL;
+  }
+
+  // 8 is the maximum size that can be checked
+  char header[8];
+  fread(header, 1, 8, fp);
+  if (png_sig_cmp((png_const_bytep) header, 0, 8)){
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> File %s is not recognized as a PNG file.\n", __FILE__, __LINE__, filename);
+    #endif
+    return NULL;
+  }
+
+
+  png_structp pngptr;
+  /* initialize stuff */
+  pngptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+  if (!pngptr){
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> png_create_read_struct failed.\n", __FILE__, __LINE__);
+    #endif
+    return NULL;
+  }
+
+  png_infop infoptr;
+  infoptr = png_create_info_struct(pngptr);
+  if (!infoptr){
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> png_create_info_struct failed.\n", __FILE__, __LINE__);
+    #endif
+    return NULL;
+  }
+
+  if (setjmp(png_jmpbuf(pngptr))) {
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> Error during init_io.\n", __FILE__, __LINE__);
+    #endif
+  }
+
+  png_init_io(pngptr, fp);
+  png_set_sig_bytes(pngptr, 8);
+
+  png_read_info(pngptr, infoptr);
+
+  RawImage* outputImage = LoadRawImage(png_get_image_width(pngptr, infoptr), png_get_image_height(pngptr, infoptr),
+                                       png_get_channels(pngptr, infoptr));
+  if (!outputImage) {
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> Failed to create RawImage object.\n", __FILE__, __LINE__);
+    #endif
+    return NULL;
+  }
+  png_read_update_info(pngptr, infoptr);
+
+  /* read file */
+  if (setjmp(png_jmpbuf(pngptr))){
+    #if DEBUG
+      fprintf(stderr, "[ERROR] <%s:%u> Error during read_image.\n", __FILE__, __LINE__);
+    #endif
+    return NULL;
+  }
+
+  png_bytep rowptrs[outputImage->height];
+  png_uint_32 rowbytes = png_get_rowbytes(pngptr, infoptr);
+  for (int i = 0; i < outputImage->height; i++)
+      rowptrs[i] = outputImage->data + i * rowbytes;
+
+  png_read_image(pngptr, rowptrs);
+  png_read_end(pngptr, NULL);
+  fclose(fp);
+
+  #if DEBUG
+    fprintf(stderr, "[INFO] <%s> Reading PNG with size (%lu x %lu) and %u color channels\n",
+            filename, outputImage->width, outputImage->height, outputImage->numColorChannels);
+  #endif
+
+  return outputImage;
+}
+
 
 RawImage* LoadRawImage(unsigned long width, unsigned long height, unsigned int numColorChannels)
 {

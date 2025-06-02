@@ -19,6 +19,7 @@ struct NormImage {
 
 // Functions to load images of different file formats
 RawImage* LoadJpegFromPath(const char* filename);
+RawImage* LoadPngFromPath(const char* filename);
 RawImage* LoadRawImage(unsigned long width, unsigned long height, unsigned int numColorChannels);
 NormImage* LoadNormImage(unsigned long width, unsigned long height, unsigned int numColorChannels);
 
