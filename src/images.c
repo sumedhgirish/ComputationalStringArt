@@ -145,6 +145,7 @@ RawImage* LoadPngFromPath(const char* filename)
 
   png_read_image(pngptr, rowptrs);
   png_read_end(pngptr, NULL);
+  png_destroy_read_struct(&pngptr, &infoptr, (png_infopp)NULL);
   fclose(fp);
 
   #if DEBUG
@@ -163,6 +164,7 @@ RawImage* LoadRawImage(unsigned long width, unsigned long height, unsigned int n
     #if DEBUG
       fprintf(stderr, "[ERROR] <%s:%u> Malloc failed for RawImage object!\n", __FILE__, __LINE__);
     #endif
+    free(outImage);
     return NULL;
   }
   outImage->width = width;
@@ -183,12 +185,12 @@ RawImage* LoadRawImage(unsigned long width, unsigned long height, unsigned int n
 
 void UnloadRawImage(RawImage **image)
 {
+  if (image == NULL || *image == NULL) return;
   #if DEBUG
     fprintf(stderr, "[INFO] <%s:%u> Called Free on raw-image.\n", __FILE__, __LINE__); 
   #endif
   free((*image)->data);
-  free((*image));
-  (*image)->data = NULL;
+  free(*image);
   *image = NULL;
 }
 
@@ -219,11 +221,11 @@ NormImage* LoadNormImage(unsigned long width, unsigned long height, unsigned int
 
 void UnloadNormImage(NormImage **image)
 {
+  if (image == NULL | *image == NULL) return;
   #if DEBUG
     fprintf(stderr, "[INFO] <%s:%u> Called Free on norm-image.\n", __FILE__, __LINE__); 
   #endif
   free((*image)->data);
   free(*image);
-  (*image)->data = NULL;
   *image = NULL;
 }

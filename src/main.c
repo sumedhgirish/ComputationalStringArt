@@ -74,8 +74,8 @@ int main()
 
   int rowStart = floor((double)(imageData->height - newHeight) / 2.);
   int colStart = floor((double)(imageData->width - newWidth) / 2.);
-  for (int rowi=rowStart; rowi <= rowStart + newHeight; ++rowi ) {
-    for (int coli=colStart; coli <= colStart + newWidth; ++coli ) {
+  for (int rowi=rowStart; rowi < rowStart + newHeight; ++rowi ) {
+    for (int coli=colStart; coli < colStart + newWidth; ++coli ) {
       for (int color=0; color<imageData->numColorChannels; ++color) {
         image->data[((rowi - rowStart) * newWidth + coli - colStart) * imageData->numColorChannels + color] =
           imageData->data[((rowi * imageData->width) + coli) * imageData->numColorChannels + color];
@@ -84,7 +84,7 @@ int main()
   }
   // End Center Cropping
 
-  NormImage* invImage;
+  NormImage* invImage = NULL;
   switch (image->numColorChannels) {
     case 1: invImage = NormalizeRawImage(image); break;
     case 3: invImage = RgbToPrintable(image); break;
@@ -101,22 +101,18 @@ int main()
   // Unload Cropped Image
   UnloadRawImage(&image);
   UnloadRawImage(&imageData);
-
-  double angles[180] = {0};
-  for (int i=0; i<180; ++i) angles[i] = i * 3.14 / 180;
-
-  NormImage* lenImage = GetStringLengths(invImage->width, invImage->height, 2, angles, 180);
-
-  #if DEBUG
-    fprintf(stderr, "[INFO] Completed Length Calculation.\n");
-  #endif
-
-  NormImage* radonImage = NormRadonTransform(invImage, angles, 180, 80, 0, 2, lenImage);
-
-  // TODO: allow the unload functions to take pointers
   UnloadNormImage(&invImage);
-  UnloadNormImage(&lenImage);
-  UnloadNormImage(&radonImage);
+
+  // double angles[180] = {0};
+  // for (int i=0; i<180; ++i) angles[i] = i * 3.14 / 180;
+
+  // NormImage* lenImage = GetStringLengths(invImage->width, invImage->height, 2, angles, 180);
+
+  // #if DEBUG
+    // fprintf(stderr, "[INFO] Completed Length Calculation.\n");
+  // #endif
+
+  // UnloadNormImage(&lenImage);
 
   #if DEBUG
     fprintf(stderr, "[INFO] Done!\n");
