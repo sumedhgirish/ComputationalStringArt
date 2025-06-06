@@ -181,13 +181,15 @@ RawImage* LoadRawImage(unsigned long width, unsigned long height, unsigned int n
   return outImage;
 }
 
-void UnloadRawImage(RawImage *image)
+void UnloadRawImage(RawImage **image)
 {
   #if DEBUG
     fprintf(stderr, "[INFO] <%s:%u> Called Free on raw-image.\n", __FILE__, __LINE__); 
   #endif
-  free(image->data);
-  free(image);
+  free((*image)->data);
+  free((*image));
+  (*image)->data = NULL;
+  *image = NULL;
 }
 
 NormImage* LoadNormImage(unsigned long width, unsigned long height, unsigned int numColorChannels)
@@ -215,11 +217,13 @@ NormImage* LoadNormImage(unsigned long width, unsigned long height, unsigned int
   return outImage;
 }
 
-void UnloadNormImage(NormImage *image)
+void UnloadNormImage(NormImage **image)
 {
   #if DEBUG
     fprintf(stderr, "[INFO] <%s:%u> Called Free on norm-image.\n", __FILE__, __LINE__); 
   #endif
-  free(image->data);
-  free(image);
+  free((*image)->data);
+  free(*image);
+  (*image)->data = NULL;
+  *image = NULL;
 }

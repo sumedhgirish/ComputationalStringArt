@@ -25,5 +25,5 @@ NormImage* LoadNormImage(unsigned long width, unsigned long height, unsigned int
 
 
 // Unloading counterparts
-void UnloadRawImage(RawImage* image);
-void UnloadNormImage(NormImage* image);
+void UnloadRawImage(RawImage** image);
+void UnloadNormImage(NormImage** image);

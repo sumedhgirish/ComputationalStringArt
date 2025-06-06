@@ -12,7 +12,7 @@ int main()
   #endif
 
   /* HYPERPARAMS */
-  const char* imageFile = "../images/crown.png";
+  const char* imageFile = "../images/lines.png";
   int totalNails = 2000;
   /* END HYPERPARAMS */
 
@@ -62,6 +62,7 @@ int main()
   }
   // End frame size calculation
 
+  // TODO: Cleanup, put this in a handy-dandy function
   // Crop image to calculated frame size
   RawImage* image = LoadRawImage(newWidth, newHeight, imageData->numColorChannels);
   if (!image) {
@@ -81,43 +82,26 @@ int main()
       }
     }
   }
-
   // End Center Cropping
 
-  // Start inversion of Image into CMYK and W
-  NormImage* invImage = RgbToPrintable(image);
+  NormImage* invImage;
+  switch (image->numColorChannels) {
+    case 1: invImage = NormalizeRawImage(image); break;
+    case 3: invImage = RgbToPrintable(image); break;
+    default: invImage = NULL; break;
+  }
   if (!invImage) {
     #if DEBUG
-      fprintf(stderr, "[ERROR] <%s:%u> Failed to convert image into printable colors CMYK!\n", __FILE__, __LINE__);
+      fprintf(stderr, "[ERROR] <%s:%u> Failed to Normalize image! Try checking the number of color channels in your image.\n",
+              __FILE__, __LINE__);
     #endif
     return 1;
   }
 
-  // for (int j=0; j<invImage->height; ++j) {
-  //   for (int i=0; i<image->width; ++i) {
-  //     fprintf(stdout, "%lf ", invImage->data[(i + j * invImage->width) * invImage->numColorChannels + 4]);
-  //   }
-  //   fprintf(stdout, "\n");
-  // }
-  //
-  // NormImage* invImage = NormalizeRawImage(image);
-  // if (!invImage) {
-  //   #if DEBUG
-  //     fprintf(stderr, "[ERROR] <%s:%u> Failed to Normalize image!\n", __FILE__, __LINE__);
-  //   #endif
-  //   return 1;
-  // }
-
   // Unload Cropped Image
-  UnloadRawImage(image);
-  image->data = NULL;
-  image = NULL;
+  UnloadRawImage(&image);
+  UnloadRawImage(&imageData);
 
-  UnloadRawImage(imageData);
-  imageData->data = NULL;
-  imageData = NULL;
-
-  // Create Radon Transform
   double angles[180] = {0};
   for (int i=0; i<180; ++i) angles[i] = i * 3.14 / 180;
 
@@ -127,24 +111,12 @@ int main()
     fprintf(stderr, "[INFO] Completed Length Calculation.\n");
   #endif
 
-  UnloadNormImage(invImage);
-  invImage->data = NULL;
-  invImage = NULL;
+  NormImage* radonImage = NormRadonTransform(invImage, angles, 180, 80, 0, 2, lenImage);
 
-  UnloadNormImage(lenImage);
-  lenImage->data = NULL;
-  lenImage = NULL;
-
-  // int buflen = invImage->width*invImage->height*4;
-  // for (int i=0; i<180; ++i) {
-  //   for (int j=0; j<360; ++j) {
-  //     printf("%lf ", lenImage->data[i * buflen + j]);
-  //   }
-  //   printf("\n");
-  // }
-  //
-  //
-  // return 0;
+  // TODO: allow the unload functions to take pointers
+  UnloadNormImage(&invImage);
+  UnloadNormImage(&lenImage);
+  UnloadNormImage(&radonImage);
 
   #if DEBUG
     fprintf(stderr, "[INFO] Done!\n");

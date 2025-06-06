@@ -13,7 +13,7 @@ NormImage* NormalizeRawImage(RawImage* inputImage)
     fprintf(stderr, "[INFO] Normalizing image!\n");
   #endif
 
-  NormImage* outputImage;
+  NormImage* outputImage = NULL;
   outputImage = LoadNormImage(inputImage->width, inputImage->height, inputImage->numColorChannels);
   if (!outputImage) {
     #if DEBUG
@@ -21,6 +21,9 @@ NormImage* NormalizeRawImage(RawImage* inputImage)
     #endif
     return NULL;
   }
+  #if DEBUG
+    fprintf(stderr, "[INFO] <%s:%u> Allocated memory for output image.\n", __FILE__, __LINE__);
+  #endif
 
   for (int i=0; i < inputImage->width * inputImage->height * inputImage->numColorChannels; ++i) {
     outputImage->data[i] = ((double)inputImage->data[i]) / 255.0;
