@@ -97,22 +97,30 @@ int main()
     #endif
     return 1;
   }
+  double angles[180] = {0};
+  for (int i=0; i<180; ++i) angles[i] = i * 3.14 / 180;
 
-  // Unload Cropped Image
+  NormImage* lenImage = GetStringLengths(invImage->width, invImage->height, 2, angles, 180);
+
+  #if DEBUG
+    fprintf(stderr, "[INFO] Completed Length Calculation.\n");
+  #endif
+
+  int nbins = 125;
+  NormImage* radonImage = NormRadonTransform(invImage, angles, 180, nbins, 0, 2, lenImage);
+
+  for (int i=0; i<180; ++i) {
+    for (int j=0; j<nbins; ++j) {
+      fprintf(stdout, "%lf ", radonImage->data[i * nbins + j]);
+    }
+    fprintf(stdout, "\n");
+  }
+ 
   UnloadRawImage(&image);
   UnloadRawImage(&imageData);
   UnloadNormImage(&invImage);
-
-  // double angles[180] = {0};
-  // for (int i=0; i<180; ++i) angles[i] = i * 3.14 / 180;
-
-  // NormImage* lenImage = GetStringLengths(invImage->width, invImage->height, 2, angles, 180);
-
-  // #if DEBUG
-    // fprintf(stderr, "[INFO] Completed Length Calculation.\n");
-  // #endif
-
-  // UnloadNormImage(&lenImage);
+  UnloadNormImage(&lenImage);
+  UnloadNormImage(&radonImage);
 
   #if DEBUG
     fprintf(stderr, "[INFO] Done!\n");

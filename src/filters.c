@@ -118,7 +118,7 @@ NormImage* RadonTransform(NormImage* inputImage, double angles[], int nangles, i
     #endif
     return NULL;
   }
-  NormImage* transformImage = LoadNormImage(nangles, nbins, 1);
+  NormImage* transformImage = LoadNormImage(nbins, nangles, 1);
   if (!transformImage) {
     #if DEBUG
       fprintf(stderr, "[ERROR] <%s:%u> Failed to create new image transformImage.\n", __FILE__, __LINE__);
@@ -190,7 +190,7 @@ NormImage* NormRadonTransform(NormImage* inputImage, double angles[], int nangle
     #endif
     return NULL;
   }
-  NormImage* transformImage = LoadNormImage(nangles, nbins, 1);
+  NormImage* transformImage = LoadNormImage(nbins, nangles, 1);
   if (!transformImage) {
     #if DEBUG
       fprintf(stderr, "[ERROR] <%s:%u> Failed to create new image transformImage.\n", __FILE__, __LINE__);
