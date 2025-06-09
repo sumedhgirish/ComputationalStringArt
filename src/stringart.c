@@ -17,9 +17,13 @@ static double FindMax(double buff[], int n, unsigned long *index)
   return maxValue;
 }
 
-static void InplaceStringRadon(NormImage *imageBuffer, double alpha, unsigned int bini)
+static void InplaceStringRadon(NormImage *imageBuffer, double alpha, double d, double lineLen, double lineThickness)
 {
-  // TODO: implement line radon transform
+  if (!imageBuffer) {
+    return;
+  }
+
+
 }
 
 static void RemoveImageFrom(NormImage *targetImage, NormImage *dataImage)
@@ -47,7 +51,7 @@ static void RemoveImageFrom(NormImage *targetImage, NormImage *dataImage)
 }
 
 RawImage* ReduceRadonImage(NormImage *radonImage, double threshold, double lineThickness,
-                           unsigned int maxNails, double angles[], int nangles)
+                           double angles[], int nangles, double binSep, NormImage *lenImage)
 {
   RawImage* linesDrawn = LoadRawImage(radonImage->width, radonImage->height, 1);
   if (!linesDrawn) {
@@ -65,7 +69,8 @@ RawImage* ReduceRadonImage(NormImage *radonImage, double threshold, double lineT
   do {
     currMax = FindMax(radonImage->data, buffLen, &maxi);
     linesDrawn->data[maxi] = 1;
-    InplaceStringRadon(stringImage, angles[maxi / radonImage->width], maxi % radonImage->width);
+    InplaceStringRadon(stringImage, angles[maxi / radonImage->width],
+                       maxi % radonImage->width * binSep, lenImage->data[maxi], lineThickness);
     RemoveImageFrom(radonImage, stringImage);
   } while (currMax > threshold);
 
@@ -73,5 +78,8 @@ RawImage* ReduceRadonImage(NormImage *radonImage, double threshold, double lineT
   return linesDrawn;
 }
 
+void GetStrings(NormImage* invImage)
+{
 
+}
 
